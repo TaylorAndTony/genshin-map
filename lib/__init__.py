@@ -1,6 +1,5 @@
 import time
 from typing import Callable, Iterable
-import json
 
 import requests
 from rich.console import Console
@@ -13,7 +12,6 @@ headers = {
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0'
 }
 
-
 # class State:
 
 #     def __init__(self):
@@ -21,11 +19,9 @@ headers = {
 #         self.y: int = 0
 #         self.zoom_level: str = 'P0'
 
-
 # def save_state(state: State):
 #     with open('state.json', 'w') as f:
 #         json.dump(state.__dict__, f)
-
 
 # def load_state() -> State:
 #     try:
@@ -143,6 +139,30 @@ def get_filename(link):
     return Path('download') / Path(link).name
 
 
+def readable_bytes(size: float | int) -> str:
+    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+        if size < 1024.0:
+            return f"{size:.1f}{unit}"
+        size /= 1024.0
+    return f"{size:.1f}PB"
+
+
+def readable_time(seconds: int | float) -> str:
+    """
+    Convert seconds to a human-readable time format.
+    
+    Args:
+        seconds: The number of seconds to convert.
+    
+    Returns:
+        A string representing the time in the format "HH:MM:SS".
+    """
+    hours = int(seconds // 3600)  # Convert to int
+    minutes = int((seconds % 3600) // 60)  # Convert to int
+    seconds = int(seconds % 60)  # Convert to int
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
+
 def batch_craw(end_x: int,
                end_y: int,
                zoom_level: str,
@@ -152,23 +172,41 @@ def batch_craw(end_x: int,
     # start_y = state.y
     # state.zoom_level = zoom_level
     console.print(
-        f'Crawling from 0 to {end_x}, 0 to {end_y}, zoom level {zoom_level}'
+        f'Crawling from 0 to {end_x}, 0 to {end_y}, zoom level {zoom_level}')
+    # skipped = 0
+    # for link, x, y in gen_links(0, 0, end_x, end_y, zoom_level):
+    #     filename = get_filename(link)
+    #     if not filename.exists():
+    #         if skipped != 0:
+    #             console.print(f'  Skipped {skipped} files from last download')
+    #             skipped = 0
+    #         console.print(f'  Downloading {link}\n  to {filename}')
+    #         download_one_link(link, str(filename))
+    #         time.sleep(sleep_time)
+    #     else:
+    #         skipped += 1
+    #     # state.x = x
+    #     # state.y = y
+    #     # save_state(state)
+    with console.status('Finding exsisting files...'):
+        link_group = list(gen_links(0, 0, end_x, end_y, zoom_level))
+        links = [link for link, _, _ in link_group]
+        filtered = [link for link in links if not get_filename(link).exists()]
+    console.print(
+        f'{len(filtered)} files to download, skipping {len(links) - len(filtered)} files'
     )
-    skipped = 0
-    for link, x, y in gen_links(0, 0, end_x, end_y, zoom_level):
-        if url_valid(link):
-            filename = get_filename(link)
-            if not filename.exists():
-                if skipped != 0:
-                    console.print(f'  Skipped {skipped} files from last download')
-                    skipped = 0
-                console.print(f'  Downloading {link}\n  to {filename}')
-                download_one_link(link, str(filename))
-                time.sleep(sleep_time)
-            else:
-                skipped += 1
-        else:
-            console.print(f'{link} not valid, skipping')
-        # state.x = x
-        # state.y = y
-        # save_state(state)
+    ask = console.input('Start downloading? [y/n] ')
+    if ask.lower() != 'y':
+        console.print('Aborted')
+        return
+    time_begin = time.monotonic()
+    for idx, link in enumerate(filtered):
+        filename = get_filename(link)
+        msg = f'({idx+1} / {len(filtered)}) Downloading {link}\n  - to {filename}'
+        console.print(msg)
+        download_one_link(link, str(filename))
+        time.sleep(sleep_time)
+        time_passed = time.monotonic() - time_begin
+        speed = (idx + 1) / time_passed
+        eta = (len(filtered) - idx) / speed
+        console.print(f'  - Speed: {speed:.2f} files/s\n  - ETA: {readable_time(eta)}s')
