@@ -1,0 +1,49 @@
+import lib
+
+from rich.console import Console
+import typer
+
+console = Console()
+app = typer.Typer()
+
+MAX_X = 143
+MAX_Y = 71
+MODE = 'P0'
+
+
+@app.command('probe')
+def probe_xy(mode: str = typer.Option(
+    MODE, help='Map mode, N3 N2 N1 or P0 (default)')):
+    """
+    Test max x and y tiles.
+    """
+    x = lib.find_max_x(mode)
+    y = lib.find_max_y(mode)
+    console.print(f'Max X: {x}, Max Y: {y}')
+
+
+@app.command('batch')
+def batch(x: int = typer.Argument(MAX_X, help=f'Max X (default {MAX_X})'),
+          y: int = typer.Argument(MAX_Y, help=f'Max Y (default {MAX_Y})'),
+          zoom: str = typer.Option(
+              MODE, help=f'Map mode, N3 N2 N1 or P0 (default {MODE})'),
+          sleep: float = typer.Option(
+              0.5, help='Sleep time between requests (default 0.5)')):
+    lib.batch_craw(x, y, zoom, sleep_time=sleep)
+
+
+@app.command('down')
+def download_one(
+    x: int = typer.Argument(0, help='X tile number'),
+    y: int = typer.Argument(0, help='Y tile number'),
+    zoom: str = typer.Option(
+        MODE, help=f'Map mode, N3 N2 N1 or P0 (default {MODE})'),
+) -> None:
+    link = lib.gen_one_link(x, y, zoom)
+    console.print(f'Downloading {link}')
+    lib.download_one_link(link, lib.get_filename(link))
+    console.print(f'Downloaded {link}')
+
+
+if __name__ == "__main__":
+    app()

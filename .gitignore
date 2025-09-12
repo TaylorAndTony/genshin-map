@@ -1,0 +1,34 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# This project
+local/
+test/
+download/
+
+# IDE based
+.idea/
+.vscode/
+.mypy_cache/
+
+# lang based
+*.py[coid]
+**/__pycache__/
+
+node_modules/
+
+*.css.map
+
+# others
+*.exe
+*.dll
+*.so
+*.dylib
