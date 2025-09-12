@@ -29,6 +29,11 @@ def batch(x: int = typer.Argument(MAX_X, help=f'Max X (default {MAX_X})'),
               MODE, help=f'Map mode, N3 N2 N1 or P0 (default {MODE})'),
           sleep: float = typer.Option(
               0.5, help='Sleep time between requests (default 0.5)')):
+    """
+    Batch download tiles. from 0 to x and 0 to y with zoom level.
+    
+    Automatically skip existing files.
+    """
     lib.batch_craw(x, y, zoom, sleep_time=sleep)
 
 
@@ -39,6 +44,9 @@ def download_one(
     zoom: str = typer.Option(
         MODE, help=f'Map mode, N3 N2 N1 or P0 (default {MODE})'),
 ) -> None:
+    """
+    Download one tile. Tile at x and y with zoom level.
+    """
     link = lib.gen_one_link(x, y, zoom)
     console.print(f'Downloading {link}')
     lib.download_one_link(link, lib.get_filename(link))

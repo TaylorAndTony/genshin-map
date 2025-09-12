@@ -195,8 +195,8 @@ def batch_craw(end_x: int,
     console.print(
         f'{len(filtered)} files to download, skipping {len(links) - len(filtered)} files'
     )
-    ask = console.input('Start downloading? [y/n] ')
-    if ask.lower() != 'y':
+    ask = console.input('Start downloading? (Y/n) ')
+    if ask.lower() not in ('', 'y', 'yes'):
         console.print('Aborted')
         return
     time_begin = time.monotonic()
