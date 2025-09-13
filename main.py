@@ -4,12 +4,45 @@ from lib.mt_down import MultiDownloader
 from rich.console import Console
 import typer
 
+from pathlib import Path
+
 console = Console()
 app = typer.Typer()
 
 MAX_X = 143
 MAX_Y = 71
 MODE = 'P0'
+
+
+@app.command('val')
+def validate(
+    to_x: int = typer.Argument(MAX_X, help=f'Max X (default {MAX_X})'),
+    to_y: int = typer.Argument(MAX_Y, help=f'Max Y (default {MAX_Y})'),
+    zoom: str = typer.Option(
+        MODE, help=f'Map mode, N3 N2 N1 or P0 (default {MODE})'),
+):
+    """
+    Validate downloaded files.
+
+    Under ./download, there should be 0_0_P0.webp, 0_1_P0.webp, ...
+    """
+    not_exist = []
+    for x in range(to_x+1):
+        for y in range(to_y+1):
+            name = f'./download/{x}_{y}_{zoom}.webp'
+            if not Path(name).exists():
+                not_exist.append(name)
+    if not_exist:
+        console.print(f'Some files are missing: {len(not_exist)}')
+        # for name in not_exist:
+            # console.print(name)
+        with open('./missing.txt', 'w', encoding='utf-8') as f:
+            for name in not_exist:
+                f.write(name + '\n')
+        console.print('Saved missing files to [cyan]missing.txt[/]')
+        return False
+    console.print('[bold green]All files exist[/bold green]')        
+    return True
 
 
 @app.command('probe')
@@ -47,7 +80,6 @@ def batch(x: int = typer.Argument(MAX_X, help=f'Max X (default {MAX_X})'),
             return
         d = MultiDownloader(links, './download', threads, lib.headers)
         d.thread_down()
-
 
 
 @app.command('down')

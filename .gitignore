@@ -13,6 +13,7 @@ wheels/
 local/
 test/
 download/
+missing.txt
 
 # IDE based
 .idea/
