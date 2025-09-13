@@ -12,27 +12,6 @@ headers = {
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0'
 }
 
-# class State:
-
-#     def __init__(self):
-#         self.x: int = 0
-#         self.y: int = 0
-#         self.zoom_level: str = 'P0'
-
-# def save_state(state: State):
-#     with open('state.json', 'w') as f:
-#         json.dump(state.__dict__, f)
-
-# def load_state() -> State:
-#     try:
-#         with open('state.json', 'r') as f:
-#             state_dict = json.load(f)
-#             state = State()
-#             state.__dict__.update(state_dict)
-#             return state
-#     except FileNotFoundError:
-#         return State()
-
 
 def gen_one_link(x: int, y: int, zoom_level: str) -> str:
     # https://act-webstatic.mihoyo.com/ys-map-op/map/2/38c777262414ff6a7b3e73829d4a7ab1/91_27_P0.webp

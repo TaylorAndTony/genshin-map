@@ -14,6 +14,10 @@ MAX_Y = 71
 MODE = 'P0'
 
 
+def clamp_value(value: int, min_value: int, max_value: int) -> int:
+    return max(min_value, min(value, max_value))
+
+
 @app.command('val')
 def validate(
     to_x: int = typer.Argument(MAX_X, help=f'Max X (default {MAX_X})'),
@@ -70,6 +74,13 @@ def batch(x: int = typer.Argument(MAX_X, help=f'Max X (default {MAX_X})'),
     
     Automatically skip existing files.
     """
+    # x = clamp_value(x, 0, MAX_X)
+    # y = clamp_value(y, 0, MAX_Y)
+    x = x if 0 <= x <= MAX_X else MAX_X
+    y = y if 0 <= y <= MAX_Y else MAX_Y
+    zoom = MODE if zoom not in ('N3', 'N2', 'N1', 'P0') else zoom
+    console.print(f'Data validation: 0-{x} and 0-{y} with zoom {zoom}')
+    
     if threads < 2:
         lib.batch_craw(x, y, zoom, sleep_time=sleep)
     else:
