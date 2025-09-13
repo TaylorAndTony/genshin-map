@@ -1,4 +1,5 @@
 import lib
+from lib.mt_down import MultiDownloader
 
 from rich.console import Console
 import typer
@@ -28,13 +29,25 @@ def batch(x: int = typer.Argument(MAX_X, help=f'Max X (default {MAX_X})'),
           zoom: str = typer.Option(
               MODE, help=f'Map mode, N3 N2 N1 or P0 (default {MODE})'),
           sleep: float = typer.Option(
-              0.5, help='Sleep time between requests (default 0.5)')):
+              0.5, help='Sleep time between requests (default 0.5)'),
+          threads: int = typer.Option(
+              -1, help='Number of threads (-1 = single thread)')):
     """
     Batch download tiles. from 0 to x and 0 to y with zoom level.
     
     Automatically skip existing files.
     """
-    lib.batch_craw(x, y, zoom, sleep_time=sleep)
+    if threads < 2:
+        lib.batch_craw(x, y, zoom, sleep_time=sleep)
+    else:
+        links = lib.get_to_down_file_list(x, y, zoom)
+        ask = console.input(f'Start downloading with {threads} threads? (Y/n) ')
+        if ask.lower() not in ('', 'y', 'yes'):
+            console.print('Aborted')
+            return
+        d = MultiDownloader(links, './download', threads, lib.headers)
+        d.thread_down()
+
 
 
 @app.command('down')

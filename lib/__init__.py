@@ -163,6 +163,19 @@ def readable_time(seconds: int | float) -> str:
     return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
 
+def get_to_down_file_list(end_x: int, end_y: int, zoom_level: str) -> list[str]:
+    console.print(
+        f'Crawling from 0 to {end_x}, 0 to {end_y}, zoom level {zoom_level}')
+    with console.status('Finding exsisting files...'):
+        link_group = list(gen_links(0, 0, end_x, end_y, zoom_level))
+        links = [link for link, _, _ in link_group]
+        filtered = [link for link in links if not get_filename(link).exists()]
+
+    console.print(
+        f'{len(filtered)} files to download, skipping {len(links) - len(filtered)} files'
+    )
+    return filtered
+
 def batch_craw(end_x: int,
                end_y: int,
                zoom_level: str,
@@ -171,30 +184,7 @@ def batch_craw(end_x: int,
     # start_x = state.x
     # start_y = state.y
     # state.zoom_level = zoom_level
-    console.print(
-        f'Crawling from 0 to {end_x}, 0 to {end_y}, zoom level {zoom_level}')
-    # skipped = 0
-    # for link, x, y in gen_links(0, 0, end_x, end_y, zoom_level):
-    #     filename = get_filename(link)
-    #     if not filename.exists():
-    #         if skipped != 0:
-    #             console.print(f'  Skipped {skipped} files from last download')
-    #             skipped = 0
-    #         console.print(f'  Downloading {link}\n  to {filename}')
-    #         download_one_link(link, str(filename))
-    #         time.sleep(sleep_time)
-    #     else:
-    #         skipped += 1
-    #     # state.x = x
-    #     # state.y = y
-    #     # save_state(state)
-    with console.status('Finding exsisting files...'):
-        link_group = list(gen_links(0, 0, end_x, end_y, zoom_level))
-        links = [link for link, _, _ in link_group]
-        filtered = [link for link in links if not get_filename(link).exists()]
-    console.print(
-        f'{len(filtered)} files to download, skipping {len(links) - len(filtered)} files'
-    )
+    filtered = get_to_down_file_list(end_x, end_y, zoom_level)
     ask = console.input('Start downloading? (Y/n) ')
     if ask.lower() not in ('', 'y', 'yes'):
         console.print('Aborted')
