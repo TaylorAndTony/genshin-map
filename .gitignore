@@ -14,6 +14,13 @@ local/
 test/
 download/
 missing.txt
+*.jpg
+*.png
+*.gif
+*.ico
+*.svg
+*.zip
+*.tar.gz
 
 # IDE based
 .idea/

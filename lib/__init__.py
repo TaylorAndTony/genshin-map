@@ -155,6 +155,7 @@ def get_to_down_file_list(end_x: int, end_y: int, zoom_level: str) -> list[str]:
     )
     return filtered
 
+
 def batch_craw(end_x: int,
                end_y: int,
                zoom_level: str,

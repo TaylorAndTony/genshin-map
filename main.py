@@ -1,8 +1,10 @@
 import lib
 from lib.mt_down import MultiDownloader
+from lib import tile
 
 from rich.console import Console
 import typer
+from PIL import Image
 
 from pathlib import Path
 
@@ -11,6 +13,7 @@ app = typer.Typer()
 
 MAX_X = 143
 MAX_Y = 71
+TILE_SIZE = 256
 MODE = 'P0'
 
 
@@ -107,6 +110,56 @@ def download_one(
     console.print(f'Downloading {link}')
     lib.download_one_link(link, lib.get_filename(link))
     console.print(f'Downloaded {link}')
+
+
+@app.command('merge')
+def merge(
+    to_x: int = typer.Argument(MAX_X, help=f'Max X (default {MAX_X})'),
+    to_y: int = typer.Argument(MAX_Y, help=f'Max Y (default {MAX_Y})'),
+    tile_size: int = typer.Option(
+        TILE_SIZE, help=f'Tile size (default {TILE_SIZE})'),
+    zoom: str = typer.Option(
+        MODE, help=f'Map mode, N3 N2 N1 or P0 (default {MODE})'),
+    out_file: str = typer.Option(
+        'out.jpg', help='Output file name (default out.jpg)'),
+    quality: int = typer.Option(
+        90, help='Output image quality (default 90)'),
+) -> None:
+    """
+    Merge downloaded tiles into one image.
+    """
+    tile.make_full_image(to_x, to_y, zoom, tile_size, out_file)
+
+
+@app.command('compress')
+def compress(
+    in_file: str = typer.Argument(..., help='Input file name'),
+    out_file: str = typer.Argument(..., help='Output file name'),
+    quality: int = typer.Option(
+        90, help='Output image quality (default 90)'),
+    rgb: bool = typer.Option(
+        False, help='Whether to convert to RGB, drop Alpha channel (default False)'),
+    max_len: int = typer.Option(
+        0, help='Whether to compress longest side to max length, keep ratio (default 0 means dont compress)'),
+) -> None:
+    """
+    Compress image file.
+    """
+    Image.MAX_IMAGE_PIXELS = None
+    with console.status('Openning image...'):
+        img = Image.open(in_file)
+    if rgb:
+        img = img.convert('RGB')
+    if max_len > 0:
+        w, h = img.size
+        if w > h:
+            img = img.resize((max_len, int(h * max_len / w)))
+        else:
+            img = img.resize((int(w * max_len / h), max_len))
+        console.print(f'Compressed max length {max_len}')
+    with console.status('Compressing image...'):
+        img.save(out_file, optimize=True, quality=quality)
+    console.print(f'Compressed `{in_file}` to `{out_file}`')
 
 
 if __name__ == "__main__":
